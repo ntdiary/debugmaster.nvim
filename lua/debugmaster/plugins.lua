@@ -50,16 +50,21 @@ plugins.ui_auto_toggle = (function()
 
       dap.listeners.before.event_terminated["debugmaster"] = function()
         require("debugmaster.state").sidepanel:close()
+        -- leave debug mode too: nothing ever exits it otherwise when the
+        -- session ends, so the step keys would keep shadowing editing keys
+        require("debugmaster.debug.mode").disable()
         print("dap terminated")
       end
 
       dap.listeners.before.event_exited["debugmaster"] = function()
         require("debugmaster.state").sidepanel:close()
+        require("debugmaster.debug.mode").disable()
         print("dap exited")
       end
 
       dap.listeners.before.disconnect["debugmaster"] = function()
         require("debugmaster.state").sidepanel:close()
+        require("debugmaster.debug.mode").disable()
         print("dap disconnected")
       end
     end

@@ -8,7 +8,7 @@ local M = {}
 ---@field desc string?
 ---@field nowait boolean?
 ---@field group string?
----@field modes table | nil Table with modes like in vim.keymap.set. {"n"} by default
+---@field modes? string[] Table with modes like in vim.keymap.set. {"n"} by default
 
 
 ---@class dm.MappingsGroup
@@ -29,14 +29,14 @@ local move_debugger_group = {
       desc = "Step over. Works with count (Try to type '5o')",
     },
     {
-      key = "m",
+      key = "i",
       action = function() require("dap").step_into() end,
-      desc = "Step into (mine deeper)",
+      desc = "Step into",
     },
     {
-      key = "q",
+      key = "p",
       action = function() require("dap").step_out() end,
-      desc = "Step out ([q]uit current stack frame)",
+      desc = "Step out ([p]arent)",
     },
     {
       key = "c",
@@ -105,38 +105,6 @@ local sidepanel = {
       end,
       desc = "Open help",
     },
-    {
-      key = "}",
-      action = function()
-        local state = require("debugmaster.state")
-        state.sidepanel:rotate(1)
-      end,
-      desc = "Rotate sidenapel clockwise",
-    },
-    {
-      key = "{",
-      action = function()
-        local state = require("debugmaster.state")
-        state.sidepanel:rotate(-1)
-      end,
-      desc = "Rotate sidenapel anticlockwise",
-    },
-    {
-      key = "-",
-      action = function()
-        local state = require("debugmaster.state")
-        state.sidepanel:resize(-10)
-      end,
-      desc = "Decrease sidenapel size",
-    },
-    {
-      key = "+",
-      action = function()
-        local state = require("debugmaster.state")
-        state.sidepanel:resize(10)
-      end,
-      desc = "Increase sidepanel size",
-    }
   }
 }
 
@@ -146,7 +114,7 @@ local float_widgets = {
   hlgroup = "STATEMENT",
   mappings = {
     {
-      key = "df",
+      key = "<leader>df",
       action = function()
         local widgets = require("dap.ui.widgets")
         pcall(widgets.cursor_float, widgets.frames)
@@ -155,7 +123,7 @@ local float_widgets = {
       desc = "Frames widget"
     },
     {
-      key = "dt",
+      key = "<leader>dt",
       action = function()
         local widgets = require("dap.ui.widgets")
         pcall(widgets.cursor_float, widgets.threads)
@@ -164,7 +132,7 @@ local float_widgets = {
       desc = "Threads widget"
     },
     {
-      key = "ds",
+      key = "<leader>ds",
       action = function()
         local widgets = require("dap.ui.widgets")
         local ok, sessions = pcall(widgets.cursor_float, widgets.sessions)
@@ -181,7 +149,7 @@ local float_widgets = {
       desc = "Debug sessions widget",
     },
     {
-      key = "db",
+      key = "<leader>db",
       action = function()
         local state = require("debugmaster.state")
         utils.open_floating_window(state.breakpoints.buf, {
@@ -216,7 +184,7 @@ local breakpoings_group = {
       desc = "Toggle breakpoint",
     },
     {
-      key = "da",
+      key = "<leader>da",
       action = function()
         require("dap").clear_breakpoints()
         print("All breakpoints removed")
@@ -224,7 +192,7 @@ local breakpoings_group = {
       desc = "Delete all breakpoints",
     },
     {
-      key = "dc",
+      key = "<leader>dc",
       action = function()
         local condition = vim.fn.input({ prompt = "Enter breakpoing condition: " })
         if condition ~= "" then
@@ -252,23 +220,24 @@ local misc_group = {
   hlgroup = "TYPE",
   mappings = {
     {
-      key = "dr",
+      key = "<leader>dr",
       desc = "Restart the current session or rerun last if none",
       action = function()
         require("debugmaster.plugins").plugins.last_config_rerunner.run_last_cached()
       end
     },
     {
-      key = "dn",
+      key = "<leader>dn",
       action = function()
         vim.cmd("DapNew")
       end,
       desc = "Debug start new sessions",
     },
     {
-      key = "dq",
+      key = "<leader>dq",
       action = function()
-        require("dap").terminate()
+        -- I use codelldb and want to keep debuggee alive
+        require("dap").terminate({ disconnect_args = { terminateDebuggee = false } })
         local state = require("debugmaster.state")
         state.sidepanel:close()
       end,
@@ -285,7 +254,7 @@ local misc_group = {
       desc = "Go to next stack frame"
     },
     {
-      key = "dj",
+      key = "<leader>dj",
       action = function() require("dap").focus_frame() end,
       desc = "Jump to the current stack frame"
     },
@@ -303,7 +272,7 @@ local misc_group = {
       desc = "Execute last yanked or deleted text in the repl",
     },
     {
-      key = "dm",
+      key = "<leader>dm",
       action = function()
         local state = require("debugmaster.state")
         local terminal = state.terminal
@@ -334,6 +303,7 @@ M.groups = {
   float_widgets,
   misc_group,
 }
+M.sidepanel = sidepanel
 
 ---Give the reference to the key entry so you can remap it to something else
 ---Throws an error if the key doesn't exist

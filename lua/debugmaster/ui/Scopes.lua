@@ -13,8 +13,6 @@ function Scopes.new()
   self.buf = scopes_buf
   self.name = "[S]copes"
   vim.keymap.set("n", "<Tab>", "<CR>", {buffer = self.buf, remap = true})
-  vim.keymap.del("n", "o", {buffer = self.buf })
-
   vim.keymap.set("n", "r", scopes.refresh, {buffer = self.buf})
 
   api.nvim_create_autocmd("User", {

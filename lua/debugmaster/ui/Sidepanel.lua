@@ -1,4 +1,5 @@
 local utils = require("debugmaster.utils")
+local mode = require('debugmaster.debug.mode')
 local api = vim.api
 
 ---@class dm.ui.Sidepanel.IComponent
@@ -218,6 +219,7 @@ end
 ---@param comp dm.ui.Sidepanel.IComponent
 function Sidepanel:add_component(comp)
   table.insert(self.components, comp)
+  mode.set_keymap_sidepane(comp.buf)
 end
 
 return Sidepanel
