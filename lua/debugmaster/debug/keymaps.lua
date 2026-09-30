@@ -237,7 +237,7 @@ local misc_group = {
       key = "<leader>dq",
       action = function()
         -- I use codelldb and want to keep debuggee alive
-        require("dap").terminate({ disconnect_args = { terminateDebuggee = false } })
+        require("dap").disconnect({ terminateDebuggee = false })
         local state = require("debugmaster.state")
         state.sidepanel:close()
       end,
