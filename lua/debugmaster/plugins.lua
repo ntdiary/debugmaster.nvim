@@ -10,6 +10,7 @@ local plugins = {}
 plugins.cursor_hl = (function()
   ---@type dm.Plugin
   local plugin = {
+    enabled = fasle,
     activate = function()
       local dcursor = api.nvim_get_hl(0, { name = "dCursor" })
       -- https://stackoverflow.com/questions/1252539/most-efficient-way-to-determine-if-a-lua-table-is-empty-contains-no-entries

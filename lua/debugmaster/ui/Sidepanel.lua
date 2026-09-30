@@ -199,6 +199,7 @@ end
 ---@param comp dm.ui.Sidepanel.IComponent
 function Sidepanel:set_active(comp)
   self.active = comp
+  mode.buf = comp.buf
   if self:is_open() then
     api.nvim_win_set_buf(self.win, self.active.buf)
     self:_cook_winbar()

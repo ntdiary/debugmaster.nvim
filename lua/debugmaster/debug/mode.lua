@@ -131,12 +131,17 @@ function M.disable()
   api.nvim_exec_autocmds("User", { pattern = "DebugModeChanged", data = { enabled = false } })
 end
 
+M.buf = nil  ---@type integer?
 function M.toggle()
-  (root ~= nil and M.disable or M.enable)()
+  local buf = vim.api.nvim_get_current_buf()
+  local fn = (originals[buf] ~= nil or buf == M.buf) and M.disable or M.enable
+  fn()
 end
 
+---@param buf integer?
 function M.is_active()
-  return root ~= nil
+  local buf = vim.api.nvim_get_current_buf()
+  return originals[buf] ~= nil or buf == M.buf
 end
 
 return M
