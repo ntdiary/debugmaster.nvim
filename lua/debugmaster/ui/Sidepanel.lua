@@ -16,7 +16,7 @@ function Sidepanel.new()
   self.win = -1 -- always need to check if valid before doing something
   self.direction = "right"
   self.float = false
-  self.size = 50 -- size for the split. not applied to float. always in the range [10;90]
+  self.size = 40 -- size for the split. not applied to float. always in the range [10;90]
 
   ---@type dm.ui.Sidepanel.IComponent[]
   self.components = {}
