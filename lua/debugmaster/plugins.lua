@@ -7,35 +7,6 @@ local plugins = {}
 ---@field activate fun() internal plugin function. User shouldn't call it
 ---@field enabled boolean? nil means plugin is enabled
 
-plugins.cursor_hl = (function()
-  ---@type dm.Plugin
-  local plugin = {
-    enabled = fasle,
-    activate = function()
-      local dcursor = api.nvim_get_hl(0, { name = "dCursor" })
-      -- https://stackoverflow.com/questions/1252539/most-efficient-way-to-determine-if-a-lua-table-is-empty-contains-no-entries
-      if next(dcursor) == nil then
-        api.nvim_set_hl(0, "dCursor", { bg = "#2da84f" })
-      end
-
-      local cursor_mode_off = vim.o.guicursor
-      local cursor_mode_on = cursor_mode_off .. ",a:dCursor"
-
-      api.nvim_create_autocmd("User", {
-        pattern = "DebugModeChanged",
-        callback = function(args)
-          if args.data.enabled then
-            vim.go.guicursor = cursor_mode_on
-          else
-            vim.go.guicursor = cursor_mode_off
-          end
-        end
-      })
-    end
-  }
-  return plugin
-end)()
-
 plugins.ui_auto_toggle = (function()
   ---@type dm.Plugin
   local plugin = {
