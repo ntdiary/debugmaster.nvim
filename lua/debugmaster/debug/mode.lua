@@ -2,13 +2,15 @@
 local M = {}
 
 
-local root = nil  ---@type string?
+local root = nil  ---@type string[]?
+local dap = require('dap')
 local keymaps = require("debugmaster.debug.keymaps")
 local cfg = require('debugmaster.cfg')
 local api = vim.api
 local augroup = api.nvim_create_augroup("debugmaster", {})
 local local_maps = {} ---@type dm.KeySpec[]
 local originals = {} ---@type table<integer, table<string, table<string, any>>>
+local ignored = {} ---@type table<integer, boolean>
 
 ---@param map dm.KeySpec
 ---@param buf? integer
@@ -50,8 +52,9 @@ local function save_original_settings(buf)
 end
 
 ---@param buf integer
----@param root? string
-local function set_keymap_local(buf, root)
+---@param enter boolean
+---@param root string[]
+local function set_keymap_local(buf, enter, root)
   if vim.bo[buf].buftype ~= '' then
     return nil
   end
@@ -59,9 +62,20 @@ local function set_keymap_local(buf, root)
   if name == '' then
     return nil
   end
-  root = root or vim.fs.root(name, '.git')
-  if root == nil or vim.fs.relpath(root, name) == nil then
-    return nil
+  if enter then
+    local out = vim.iter(root):all(function(v)
+      return vim.fs.relpath(v, name) == nil
+    end)
+    if out then
+      ignored[buf] = true
+      return nil
+    end
+  else
+    local p = vim.fs.root(name, '.git')
+    if not p then
+      return nil
+    end
+    root = { p }
   end
   save_original_settings(buf)
   for _, map in ipairs(local_maps) do
@@ -78,11 +92,11 @@ end
 
 M.enable = function()
   if root then  -- for now, only active one
-    vim.notify('have enabled for ' .. root)
+    vim.notify('have enabled for ' .. vim.inspect(root))
     return
   end
   local buf = vim.api.nvim_get_current_buf()
-  root = set_keymap_local(buf, root)
+  root = set_keymap_local(buf, false, root)
   if root == nil then
     vim.notify('can not find a git repo')
     return
@@ -90,20 +104,29 @@ M.enable = function()
   api.nvim_create_autocmd("BufEnter", {
     group = augroup,
     callback = function(e)
-      if root and originals[e.buf] == nil then
-        set_keymap_local(e.buf, root)
+      if root and originals[e.buf] == nil and ignored[e.buf] == nil then
+        set_keymap_local(e.buf, true, root)
       end
     end,
   })
   api.nvim_create_autocmd('BufUnload', {
     group = augroup,
     callback = function(e)
-      if originals[e.buf] then
-        originals[e.buf] = nil
-      end
+      originals[e.buf] = nil
+      ignored[e.buf] = nil
     end
   })
   api.nvim_exec_autocmds("User", { pattern = "DebugModeChanged", data = { enabled = true } })
+  local dap = require('dap')
+  dap.listeners.after.configurationDone['debugmaster'] = function(session)
+    if session and session.config and session.config.pathMappings then
+      for _, v in pairs(session.config.pathMappings) do
+        if not vim.tbl_contains(root, v) then
+          root[#root] = v
+        end
+      end
+    end
+  end
 end
 
 function M.disable()
@@ -127,6 +150,7 @@ function M.disable()
       end
     end
     originals[buf] = nil
+    ignored[buf] = nil
   end
   api.nvim_exec_autocmds("User", { pattern = "DebugModeChanged", data = { enabled = false } })
 end
